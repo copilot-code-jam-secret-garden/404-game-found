@@ -35,24 +35,29 @@ export class Preloader extends Scene
         // We already know 'background' is loaded in the Boot scene as 'middle.png'
         // Load the other required images
         this.load.image('back', 'back.png');
-        
-        // Load tiles as a spritesheet with 2 frames at 88x76 size
+
+        // Load tiles as a spritesheet while ignoring the 16-pixel void
         this.load.spritesheet('tiles', 'tiles.png', {
-            frameWidth: 88,
-            frameHeight: 76
+            frameWidth: 64, // Actual tile width without the void
+            frameHeight: 69, // Actual tile height without the void
+            margin: 16, // Ignore the 16-pixel void at the beginning
+            spacing: 16 // Ignore the 16-pixel void in the middle and end
         });
-        
+
         // Load the player walking spritesheet
-        this.load.spritesheet('player-walk', 'Walk.png', { 
-            frameWidth: 512, 
-            frameHeight: 512 
+        this.load.spritesheet('player-walk', 'Walk.png', {
+            frameWidth: 512,
+            frameHeight: 512
         });
-        
+
         // Load the player jumping spritesheet
         this.load.spritesheet('player-jump', 'Jump.png', {
             frameWidth: 512,
             frameHeight: 512
         });
+
+        // Load the empty flower pot image
+        this.load.image('flower-pot-red', 'EmptyFlowerPots/FlowerPot2RED.png');
     }
 
     create ()
@@ -77,7 +82,7 @@ export class Preloader extends Scene
             frames: [{ key: 'player-walk', frame: 0 }],
             frameRate: 10
         });
-        
+
         // Create jump animation
         this.anims.create({
             key: 'jump',
@@ -86,7 +91,27 @@ export class Preloader extends Scene
             repeat: 0 // Don't repeat the jump animation
         });
 
-        // After preloading assets, go to the MainMenu scene instead of directly to GameScene
+        // Example of randomly alternating tiles
+        const tileWidth = 64;
+        const tileHeight = 69;
+        const numTiles = 10; // Number of tiles to display in a row
+        const startX = 100; // Starting X position
+        const startY = 300; // Starting Y position
+        const potScale = 2.5; // Scale factor for the flower pots
+
+        for (let i = 0; i < numTiles; i++) {
+            const tileKey = Math.random() < 0.5 ? 0 : 1; // Randomly choose between tile 0 and tile 1
+            const tile = this.add.image(startX + i * tileWidth, startY, 'tiles', tileKey);
+
+            // Randomly place a flower pot on top of some tiles
+            if (Math.random() < 0.3) { // 30% chance to place a flower pot
+                const flowerPot = this.add.image(tile.x, tile.y - tileHeight / 2, 'flower-pot-red');
+                flowerPot.setOrigin(0.5, 1); // Align the bottom center of the flower pot to the tile
+                flowerPot.setScale(potScale); // Dynamically scale the flower pot
+            }
+        }
+
+        // After preloading assets, go to the MainMenu scene
         this.scene.start('MainMenu');
     }
 }
