@@ -55,6 +55,12 @@ export class Preloader extends Scene
             frameWidth: 512,
             frameHeight: 512
         });
+        
+        // Load the player attack spritesheet
+        this.load.spritesheet('player-attack', 'Attack.png', {
+            frameWidth: 512,
+            frameHeight: 512
+        });
 
         // Load the empty flower pot image
         this.load.image('flower-pot-red', 'EmptyFlowerPots/FlowerPot2RED.png');
@@ -89,6 +95,14 @@ export class Preloader extends Scene
             frames: this.anims.generateFrameNumbers('player-jump', { start: 0, end: 11 }),
             frameRate: 10, // Increased from 10 to 20 for faster animation
             repeat: 0 // Don't repeat the jump animation
+        });
+        
+        // Create attack animation
+        this.anims.create({
+            key: 'attack',
+            frames: this.anims.generateFrameNumbers('player-attack', { start: 0, end: 4 }),
+            frameRate: 15, // Slightly faster than walking to make attacks feel impactful
+            repeat: 0 // Play once and stop
         });
 
         // Example of randomly alternating tiles

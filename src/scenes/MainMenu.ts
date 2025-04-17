@@ -15,6 +15,10 @@ export class MainMenu extends Scene
     private jumpVelocity: number = -400;
     private isJumping: boolean = false;
     private canJump: boolean = false;
+    
+    // Property for attack mechanics
+    private isAttacking: boolean = false;
+    private attackKey: Phaser.Input.Keyboard.Key;
 
     // Ground properties
     private groundTiles: Phaser.GameObjects.Group;
@@ -57,7 +61,7 @@ export class MainMenu extends Scene
         this.player.setCollideWorldBounds(true);
 
         // Add instruction text
-        const infoText = this.add.text(width / 2, 600, 'Use Arrow Keys to Move, Space to Jump', {
+        const infoText = this.add.text(width / 2, 600, 'Use Arrow Keys to Move, Space to Jump, A to Attack', {
             fontFamily: 'Arial', fontSize: 24, color: '#ffffff',
             stroke: '#000000', strokeThickness: 4,
             align: 'center'
@@ -74,6 +78,9 @@ export class MainMenu extends Scene
 
         // Initialize cursor keys for player control
         this.cursors = this.input.keyboard.createCursorKeys();
+
+        // Initialize attack key
+        this.attackKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
 
         // Set the idle animation for the player at start
         this.player.play('idle');
@@ -141,62 +148,84 @@ export class MainMenu extends Scene
         // Track if the player is moving horizontally
         let isMoving = false;
 
-        // Handle horizontal movement with physics velocity
-        if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-this.playerSpeed);
-            if (!this.playerFacingLeft) {
-                // Flip the sprite to face left
-                this.player.setFlipX(true);
-                this.playerFacingLeft = true;
+        // Don't process movement if the player is attacking
+        if (!this.isAttacking) {
+            // Handle horizontal movement with physics velocity
+            if (this.cursors.left.isDown) {
+                this.player.setVelocityX(-this.playerSpeed);
+                if (!this.playerFacingLeft) {
+                    // Flip the sprite to face left
+                    this.player.setFlipX(true);
+                    this.playerFacingLeft = true;
+                }
+                if (this.player.anims.currentAnim?.key !== 'walk-left' && this.canJump) {
+                    this.player.play('walk-left');
+                }
+                isMoving = true;
+            } else if (this.cursors.right.isDown) {
+                this.player.setVelocityX(this.playerSpeed);
+                if (this.playerFacingLeft) {
+                    // Flip the sprite to face right
+                    this.player.setFlipX(false);
+                    this.playerFacingLeft = false;
+                }
+                if (this.player.anims.currentAnim?.key !== 'walk-right' && this.canJump) {
+                    this.player.play('walk-right');
+                }
+                isMoving = true;
+            } else {
+                // Stop horizontal movement when no keys are pressed
+                this.player.setVelocityX(0);
             }
-            if (this.player.anims.currentAnim?.key !== 'walk-left' && this.canJump) {
-                this.player.play('walk-left');
-            }
-            isMoving = true;
-        } else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(this.playerSpeed);
-            if (this.playerFacingLeft) {
-                // Flip the sprite to face right
-                this.player.setFlipX(false);
-                this.playerFacingLeft = false;
-            }
-            if (this.player.anims.currentAnim?.key !== 'walk-right' && this.canJump) {
-                this.player.play('walk-right');
-            }
-            isMoving = true;
-        } else {
-            // Stop horizontal movement when no keys are pressed
-            this.player.setVelocityX(0);
-        }
 
-        // Check if player is touching the ground
-        const wasInAir = !this.canJump;
-        this.canJump = this.player.body.touching.down;
+            // Check if player is touching the ground
+            const wasInAir = !this.canJump;
+            this.canJump = this.player.body.touching.down;
 
-        // Just landed
-        if (wasInAir && this.canJump) {
-            this.isJumping = false;
-            if (!isMoving) {
+            // Just landed
+            if (wasInAir && this.canJump) {
+                this.isJumping = false;
+                if (!isMoving) {
+                    this.player.play('idle');
+                }
+            }
+
+            // Handle jumping with spacebar OR up arrow
+            if ((this.cursors.up.isDown || this.cursors.space.isDown) && this.canJump && !this.isJumping) {
+                this.player.setVelocityY(this.jumpVelocity);
+                this.player.play('jump');
+                this.isJumping = true;
+            }
+
+            // If in the air (jumping or falling), play jump animation if not already playing
+            if (!this.canJump && !this.isJumping) {
+                this.player.play('jump');
+                this.isJumping = true;
+            }
+
+            // If not moving horizontally and on the ground, play idle animation
+            if (!isMoving && this.canJump && !this.isJumping) {
                 this.player.play('idle');
             }
         }
 
-        // Handle jumping with spacebar OR up arrow
-        if ((this.cursors.up.isDown || this.cursors.space.isDown) && this.canJump && !this.isJumping) {
-            this.player.setVelocityY(this.jumpVelocity);
-            this.player.play('jump');
-            this.isJumping = true;
-        }
-
-        // If in the air (jumping or falling), play jump animation if not already playing
-        if (!this.canJump && !this.isJumping) {
-            this.player.play('jump');
-            this.isJumping = true;
-        }
-
-        // If not moving horizontally and on the ground, play idle animation
-        if (!isMoving && this.canJump && !this.isJumping) {
-            this.player.play('idle');
+        // Handle attack action with the 'A' key
+        if (Phaser.Input.Keyboard.JustDown(this.attackKey) && !this.isAttacking && this.canJump) {
+            this.isAttacking = true;
+            // Stop horizontal movement during attack
+            this.player.setVelocityX(0);
+            
+            // Play the attack animation
+            this.player.play('attack');
+            
+            // Listen for animation completion to reset attack state
+            this.player.once('animationcomplete', () => {
+                this.isAttacking = false;
+                // Return to idle if not moving
+                if (this.canJump && !this.cursors.left.isDown && !this.cursors.right.isDown) {
+                    this.player.play('idle');
+                }
+            });
         }
 
         // Keep player within horizontal screen boundaries
