@@ -141,6 +141,7 @@ export class MainMenu extends Scene
                 const flowerPot = this.add.image(tileX + this.tileSize / 2, groundY - 20, 'flower-pot-red');
                 flowerPot.setOrigin(0.5, 1); // Align the bottom center of the flower pot to the tile
                 flowerPot.setData('hasFlower', false); // Initialize flower pot data
+                flowerPot.setDepth(10); // Set a higher depth for the pot so flowers will be behind it
                 this.flowerPots.add(flowerPot); // Add flower pot to the group
             }
         }
