@@ -64,6 +64,9 @@ export class Preloader extends Scene
 
         // Load the empty flower pot image
         this.load.image('flower-pot-red', 'EmptyFlowerPots/FlowerPot2RED.png');
+        
+        // Load the purple flower image
+        this.load.image('flower-purple', 'Flower 2/Flower 2 - PURPLE.png');
     }
 
     create ()

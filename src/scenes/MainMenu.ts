@@ -19,9 +19,11 @@ export class MainMenu extends Scene
     // Property for attack mechanics
     private isAttacking: boolean = false;
     private attackKey: Phaser.Input.Keyboard.Key;
+    private attackRange: number = 60; // Range of the attack in pixels
 
     // Ground properties
     private groundTiles: Phaser.GameObjects.Group;
+    private flowerPots: Phaser.GameObjects.Group; // New group to track flower pots
     private tileSize: number = 64; // Size of the tile sprite
 
     constructor ()
@@ -101,6 +103,9 @@ export class MainMenu extends Scene
         // Create a group to hold all our ground tiles
         this.groundTiles = this.add.group();
 
+        // Create a group to hold all flower pots
+        this.flowerPots = this.add.group();
+
         // Calculate how many tiles we need to cover the width of the screen
         const tilesNeeded = Math.ceil(width / this.tileSize) + 1; // +1 to ensure full coverage
 
@@ -135,6 +140,8 @@ export class MainMenu extends Scene
             if (Math.random() < 0.3) { // 30% chance to place a flower pot
                 const flowerPot = this.add.image(tileX + this.tileSize / 2, groundY - 20, 'flower-pot-red');
                 flowerPot.setOrigin(0.5, 1); // Align the bottom center of the flower pot to the tile
+                flowerPot.setData('hasFlower', false); // Initialize flower pot data
+                this.flowerPots.add(flowerPot); // Add flower pot to the group
             }
         }
     }
@@ -218,6 +225,49 @@ export class MainMenu extends Scene
             // Play the attack animation
             this.player.play('attack');
             
+            // Detect flower pots within attack range
+            this.flowerPots.getChildren().forEach((flowerPot: Phaser.GameObjects.Image) => {
+                // Skip if this flower pot already has a flower
+                if (flowerPot.getData('hasFlower')) {
+                    return;
+                }
+                
+                const distance = Phaser.Math.Distance.Between(
+                    this.player.x, 
+                    this.player.y, 
+                    flowerPot.x, 
+                    flowerPot.y
+                );
+                
+                // Check if the flower pot is within attack range and on the correct side (based on player facing direction)
+                const isOnCorrectSide = (this.playerFacingLeft && flowerPot.x < this.player.x) || 
+                                       (!this.playerFacingLeft && flowerPot.x > this.player.x);
+                
+                if (distance <= this.attackRange && isOnCorrectSide) {
+                    // Get the position of the flower pot
+                    const potX = flowerPot.x;
+                    const potY = flowerPot.y - 25; // Position flower above the pot
+                    
+                    // Mark this pot as having a flower so we don't add another one
+                    flowerPot.setData('hasFlower', true);
+                    
+                    // Create the purple flower at the position above the pot
+                    const flower = this.add.image(potX, potY, 'flower-purple');
+                    flower.setOrigin(0.5, 0.5); // Same origin as flower pot
+                    flower.setScale(0.5); // Scale for appropriate size
+                    
+                    // Add a growth animation effect
+                    this.tweens.add({
+                        targets: flower,
+                        scaleX: { from: 0.1, to: 0.5 },
+                        scaleY: { from: 0.1, to: 0.5 },
+                        y: { from: potY + 10, to: potY }, // Slight upward movement as it grows
+                        duration: 500,
+                        ease: 'Back.easeOut'
+                    });
+                }
+            });
+
             // Listen for animation completion to reset attack state
             this.player.once('animationcomplete', () => {
                 this.isAttacking = false;
