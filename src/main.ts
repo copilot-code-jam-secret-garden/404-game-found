@@ -1,19 +1,24 @@
+import { Game, AUTO } from 'phaser';
 import { Boot } from './scenes/Boot';
-import { Game as MainGame } from './scenes/Game';
-import { GameOver } from './scenes/GameOver';
-import { MainMenu } from './scenes/MainMenu';
 import { Preloader } from './scenes/Preloader';
+import { MainMenu } from './scenes/MainMenu';
+import { GameScene } from './scenes/GameScene';
+import { GameOver } from './scenes/GameOver';
+import { Game as GamePlay } from './scenes/Game';
 
-import { Game, Types } from "phaser";
-
-//  Find out more information about the Game Config at:
-//  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
-const config: Types.Core.GameConfig = {
-    type: Phaser.AUTO,
+const config = {
+    type: AUTO,
     width: 1024,
     height: 768,
     parent: 'game-container',
     backgroundColor: '#028af8',
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 0 },  // We'll set gravity per scene as needed
+            debug: false
+        }
+    },
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
@@ -22,7 +27,8 @@ const config: Types.Core.GameConfig = {
         Boot,
         Preloader,
         MainMenu,
-        MainGame,
+        GamePlay,
+        GameScene,
         GameOver
     ]
 };

@@ -29,18 +29,64 @@ export class Preloader extends Scene
 
     preload ()
     {
-        //  Load the assets for the game - Replace with your own assets
+        //  Load the assets for the game
         this.load.setPath('assets');
 
-        this.load.image('logo', 'logo.png');
+        // We already know 'background' is loaded in the Boot scene as 'middle.png'
+        // Load the other required images
+        this.load.image('back', 'back.png');
+        
+        // Load tiles as a spritesheet with 2 frames at 88x76 size
+        this.load.spritesheet('tiles', 'tiles.png', {
+            frameWidth: 88,
+            frameHeight: 76
+        });
+        
+        // Load the player walking spritesheet
+        this.load.spritesheet('player-walk', 'Walk.png', { 
+            frameWidth: 512, 
+            frameHeight: 512 
+        });
+        
+        // Load the player jumping spritesheet
+        this.load.spritesheet('player-jump', 'Jump.png', {
+            frameWidth: 512,
+            frameHeight: 512
+        });
     }
 
     create ()
     {
-        //  When all the assets have loaded, it's often worth creating global objects here that the rest of the game can use.
-        //  For example, you can define global animations here, so we can use them in other scenes.
+        // Create animations for the player
+        this.anims.create({
+            key: 'walk-right',
+            frames: this.anims.generateFrameNumbers('player-walk', { start: 0, end: 4 }),
+            frameRate: 10,
+            repeat: -1
+        });
 
-        //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
+        this.anims.create({
+            key: 'walk-left',
+            frames: this.anims.generateFrameNumbers('player-walk', { start: 0, end: 4 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'idle',
+            frames: [{ key: 'player-walk', frame: 0 }],
+            frameRate: 10
+        });
+        
+        // Create jump animation
+        this.anims.create({
+            key: 'jump',
+            frames: this.anims.generateFrameNumbers('player-jump', { start: 0, end: 11 }),
+            frameRate: 10, // Increased from 10 to 20 for faster animation
+            repeat: 0 // Don't repeat the jump animation
+        });
+
+        // After preloading assets, go to the MainMenu scene instead of directly to GameScene
         this.scene.start('MainMenu');
     }
 }

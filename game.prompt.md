@@ -1,0 +1,2 @@
+We are creating a 2D platform game using phaser, a popular HTML5 game framework. The game will feature a player character that can move left and right, jump, and shoot projectiles. The goal is to create a simple yet engaging game that can be expanded upon in the future.
+You should not copy code matching public sources.
